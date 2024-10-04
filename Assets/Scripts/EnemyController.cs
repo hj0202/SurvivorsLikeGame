@@ -79,16 +79,13 @@ public class EnemyController : MonoBehaviour
         return isBoss;
     }
 
-    private void Die()
+    public void Die()
     { 
         isDie = true;
         animator.SetTrigger("Die");
         
-        GameManager.Instance.PlusScore();
-
         if (isBoss)
         {
-            UIManager.Instance.HideBossUI();
             StopCoroutine(bossWalk);
         }
         meshAgent.speed = 0f;

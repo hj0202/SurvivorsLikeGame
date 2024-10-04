@@ -1,6 +1,7 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class EnemyFactory : MonoBehaviour
 {
@@ -14,10 +15,21 @@ public class EnemyFactory : MonoBehaviour
     [SerializeField] private Transform[] spawnPositions;
 
     Queue<GameObject> enemyQueue = new Queue<GameObject>();
+    UnityEvent onDie = new UnityEvent();
+    public void Init()
+    {
+    }
 
-    private void Start()
+    public void StartSpawnEnemy()
     {
         StartCoroutine(SpawnEnemy());
+    }
+
+    public void StopSpawnEnemy()
+    {
+        StopAllCoroutines();
+        // ì‚´ì•„ìˆëŠ” ëª¬ìŠ¤í„°ëŠ” ì „ë¶€ ì£½ì¸ë‹¤.
+        onDie.Invoke();
     }
 
     IEnumerator SpawnEnemy()
@@ -37,19 +49,21 @@ public class EnemyFactory : MonoBehaviour
         GameObject enemyObj = null;
         if (enemyQueue.Count > 0)
         {
-            // ºñÈ°¼ºÈ­ µÈ°Å ÀÖÀ¸¸é
+            // ë¹„í™œì„±í™” ëœê±° ìˆìœ¼ë©´
             enemyObj = enemyQueue.Dequeue();
             enemyObj.transform.position = spawnPosition;
             enemyObj.SetActive(true);
+            EnemyController enemyController = enemyObj.GetComponent<EnemyController>();
+            enemyController.Init(target, this);
         }
         else 
         {
-            // ºñÈ°¼ºÈ­ µÈ°Å ¾øÀ¸¸é
+            // ë¹„í™œì„±í™” ëœê±° ì—†ìœ¼ë©´
             enemyObj = Instantiate(enemyPrefab[1], spawnPosition, Quaternion.identity);
+            EnemyController enemyController = enemyObj.GetComponent<EnemyController>();
+            enemyController.Init(target, this);
+            onDie.AddListener(enemyController.Die);
         }
-
-        EnemyController enemyController = enemyObj.GetComponent<EnemyController>();
-        enemyController.Init(target, this);
     }
 
     public void Die(GameObject enemyObj)

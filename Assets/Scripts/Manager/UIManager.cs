@@ -7,55 +7,51 @@ using UnityEngine.SceneManagement;
 public class UIManager : Singleton<UIManager>
 {
     [SerializeField] Image hpBar;
-    [SerializeField] Text scoreText;
-
-    [SerializeField] GameObject gameOverText;
-    [SerializeField] Button restartButton;
-
-    [SerializeField] Button rollButton;
 
     [SerializeField] GameObject bossUI;
     [SerializeField] Image bossHpBar;
 
-    private void Awake()
+    [SerializeField] StartUIView startUIView;
+    [SerializeField] PlayUIView playUIView;
+    [SerializeField] ResultUIView resultUIView;
+
+    public void HideUIViewAll()
     {
-        restartButton.onClick.AddListener(Restart);
-        rollButton.onClick.AddListener(OnClickRoll);
+        startUIView.gameObject.SetActive(false);
+        playUIView.gameObject.SetActive(false);
+        resultUIView.gameObject.SetActive(false);
     }
 
-    public void OnClickRoll()
+    public void ShowStartUIView()
     {
-        GameManager.Instance.Roll();
+        startUIView.gameObject.SetActive(true);
+        playUIView.gameObject.SetActive(false);
+        resultUIView.gameObject.SetActive(false);
+    }
+
+    public void ShowPlayUIView()
+    {
+        startUIView.gameObject.SetActive(false);
+        playUIView.gameObject.SetActive(true);
+        resultUIView.gameObject.SetActive(false);
+    }
+
+    public void ShowResultUIView()
+    {
+        startUIView.gameObject.SetActive(false);
+        playUIView.gameObject.SetActive(false);
+        resultUIView.gameObject.SetActive(true);
+    }
+
+    public void UpdateTime(int time)
+    {
+        playUIView.UpdateTimeText(time);
+        resultUIView.UpdateTimeText(time);
     }
 
     public void UpdateHpBar(float hp, float maxHp)
     {
         hpBar.fillAmount = hp / maxHp;
-    }
-
-    public void UpdateScore(int score)
-    {
-        scoreText.text = $"Score: {score}";
-    }
-
-    public void ShowGameOverUI()
-    {
-        gameOverText.SetActive(true);
-    }
-
-    public void Restart()
-    {
-        SceneManager.LoadScene("Game");
-    }
-
-    public void ShowBossUI()
-    {
-        bossUI.SetActive(true);
-    }
-
-    public void HideBossUI()
-    {
-        bossUI.SetActive(false);
     }
 
     public void UpdateBossHpBar(float hp, float maxHp)

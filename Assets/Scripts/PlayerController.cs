@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using System.Collections;
 using UnityEngine.InputSystem;
 using System.Collections.Generic;
@@ -21,7 +21,6 @@ public class PlayerController : MonoBehaviour, InputControls.IPlayerActions
     private IEnumerator move;
     private float hp;
     private bool isDamaged;
-    private Vector3 dir2 = Vector3.forward;
 
     [SerializeField] private GameObject attack;
 
@@ -32,7 +31,8 @@ public class PlayerController : MonoBehaviour, InputControls.IPlayerActions
 
         animator = GetComponent<Animator>();
         rigidbody = GetComponent<Rigidbody>();
-        hp = maxHp;
+        
+        Init();
     }
 
     private void Start()
@@ -42,7 +42,17 @@ public class PlayerController : MonoBehaviour, InputControls.IPlayerActions
 
     private void Update()
     {
-        camera.position = transform.position + new Vector3(0, 15, -5);
+        camera.position = transform.position + new Vector3(0, 20, -8);
+    }
+
+    public void Init()
+    {
+        hp = maxHp;
+        isDamaged = false;
+        transform.position = Vector3.up;
+        transform.rotation = Quaternion.identity;
+        animator.SetBool("Walk", false);
+        UIManager.Instance.UpdateHpBar(hp, maxHp);
     }
 
     IEnumerator Attack()
@@ -71,8 +81,8 @@ public class PlayerController : MonoBehaviour, InputControls.IPlayerActions
             // GameManager -> PoolManager -> GetAttack
 
             // GameObject attackObj = GetAttack();
-            // position ¼³Á¤
-            // AutoAttack°¡Á®¿Í¼­
+            // position ì„¤ì •
+            // AutoAttackê°€ì ¸ì™€ì„œ
             // SetTarget.
         }
     }
@@ -88,7 +98,7 @@ public class PlayerController : MonoBehaviour, InputControls.IPlayerActions
         float minDistance = range * range;
         for (int i = 0; i < colliders.Length; i++)
         {
-            // Enemy°¡ Á×Àº »óÅÂ¸é ¹«½ÃÇÏ±â
+            // Enemyê°€ ì£½ì€ ìƒíƒœë©´ ë¬´ì‹œí•˜ê¸°
             EnemyController enemy = colliders[i].gameObject.GetComponent<EnemyController>();
             if (enemy.IsDie())
                 continue;
@@ -98,11 +108,11 @@ public class PlayerController : MonoBehaviour, InputControls.IPlayerActions
             if (enemy.IsBoss())
                 return colliderPosition;
 
-            // °Å¸® ±¸ÇÏ±â
+            // ê±°ë¦¬ êµ¬í•˜ê¸°
             Vector3 heading = colliderPosition - myPosition;
             float distance = heading.sqrMagnitude;
 
-            // ÃÖ¼Ò °Å¸® °»½Å
+            // ìµœì†Œ ê±°ë¦¬ ê°±ì‹ 
             if (distance < minDistance)
             {
                 
@@ -111,7 +121,7 @@ public class PlayerController : MonoBehaviour, InputControls.IPlayerActions
             }    
         }
 
-        // ÃÖ¼Ò °Å¸® À§Ä¡ ¹ÝÈ¯
+        // ìµœì†Œ ê±°ë¦¬ ìœ„ì¹˜ ë°˜í™˜
         Debug.Log("target:" + targetPosition);
         return targetPosition;
     }
@@ -135,7 +145,6 @@ public class PlayerController : MonoBehaviour, InputControls.IPlayerActions
         }
         else if (context.performed)
         {
-            dir2 = context.ReadValue<Vector2>();
             Vector2 dir = context.ReadValue<Vector2>();
             Debug.Log(Vector2.Angle(dir, Vector2.up));
             if (move != null)
@@ -172,15 +181,6 @@ public class PlayerController : MonoBehaviour, InputControls.IPlayerActions
 
     }
 
-    public void Roll()
-    {
-        // ³»°¡ ¹Ù¶óº¸´Â ¹æÇâÀ¸·Î AddForce
-        rigidbody.AddForce(new Vector3(dir2.x, 0, dir2.y) * 300f);
-        // ±¸¸£´Â µ¿¾È ¹«Àû
-
-
-    }
-
     private void OnDrawGizmos()
     {
         Gizmos.DrawWireSphere(transform.position, range);
@@ -204,8 +204,8 @@ public class PlayerController : MonoBehaviour, InputControls.IPlayerActions
         if (hp <= 0)
         {
             hp = 0;
-            UIManager.Instance.ShowGameOverUI();
             range = 0;
+            GameManager.Instance.EndGame();
         }
         UIManager.Instance.UpdateHpBar(hp, maxHp);
         isDamaged = true;
@@ -218,19 +218,16 @@ public class PlayerController : MonoBehaviour, InputControls.IPlayerActions
         return transform.position;
     }
 
-    // Set State
+    #region Input
 
-    // Roll ÀÌ¸é
-    // °ø°Ý ¾È ¹ÞÀ½
-    // ¾È ¿òÁ÷ÀÓ
-    
+    public void EnableInput()
+    {
+        input.Player.Enable();
+    }
 
-    // Walk¸é 
-    // ¿òÁ÷ÀÓ
-    // °ø°Ý ¹ÞÀ½
-
-
-    // IdleÀÌ¸é
-    // ¾È¿òÁ÷ÀÓ
-    // °ø°Ý ¹ÞÀ½
+    public void DisableInput()
+    {
+        input.Player.Disable();
+    }
+    #endregion
 }

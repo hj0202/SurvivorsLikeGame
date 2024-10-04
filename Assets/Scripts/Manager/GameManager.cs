@@ -1,64 +1,99 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class GameManager : Singleton<GameManager>
 {
+    private const int MAX_TIME = 600;
+
     private static ResourceManager resourceManager = new ResourceManager();
 
     public static ResourceManager Resource { get { return resourceManager; } }
 
     [SerializeField] private PlayerController player;
-    [SerializeField] private GameObject bossPrefab;
-    private int score;
-    private bool isBossMode;
+    [SerializeField] private EnemyFactory enemyFactory;
 
-    //�׽���
-    // �÷��̾����
-    // UI������
+    private int time = 0;
+    private IEnumerator timeCounter;
+
     private void Awake()
     {
-        score = 0;
-        UIManager.Instance.UpdateScore(score);
-
-        isBossMode = false;
+        UIManager.Instance.HideUIViewAll();
     }
 
-    public void PlusScore()
+    private void Start()
     {
-        score++;
-        UIManager.Instance.UpdateScore(score);
+        UIManager.Instance.ShowStartUIView();
+    }
 
-        if (score >= 10)
+    #region Game Flow
+
+    public void StartGame()
+    {
+        // 씬 초기화
+        // 오브젝트(몬스터, 스킬 등) 전부 삭제
+        // 플레이어 상태 초기화, 위치 초기화
+        player.Init();
+        enemyFactory.Init();
+
+        // 플레이어 입력 O
+        player.EnableInput();
+
+        // 몬스터 생성 O
+        enemyFactory.Init();
+        enemyFactory.StartSpawnEnemy();
+
+        // Play View 표시
+        UIManager.Instance.ShowPlayUIView();
+
+        // 시간 측정 O
+        StartCountTime();
+
+    }
+
+    public void EndGame()
+    {
+        // 플레이어 입력 X
+        player.DisableInput();
+
+        // 몬스터 생성 X
+        enemyFactory.StopSpawnEnemy();
+
+        // Result View 표시
+        UIManager.Instance.ShowResultUIView();
+        UIManager.Instance.UpdateTime(time);
+
+        // 시간 측정 X
+        StopCountTime();
+    }
+    #endregion
+
+    #region Time
+
+    private void StartCountTime()
+    {
+        timeCounter = TimeCounter();
+        StartCoroutine(timeCounter);
+    }
+
+    private void StopCountTime()
+    {
+        StopCoroutine(timeCounter);
+    }
+
+    IEnumerator TimeCounter()
+    {
+        time = 0;
+        UIManager.Instance.UpdateTime(time);
+        while (true)
         {
-            if (!isBossMode)
-            {
-                isBossMode = true;
-                StartBossStage();
-            }
+            yield return new WaitForSeconds(1f);
+            time++;
+            UIManager.Instance.UpdateTime(time);
+
+            if (time >= MAX_TIME)
+                EndGame();
         }
     }
-
-
-    public void Roll()
-    {
-        player.Roll();
-    }
-
-    public void StartBossStage()
-    {
-        // Boss ����
-        // Boss UI active true
-        Vector3 position = player.GetPosition() + Vector3.forward * 10f;
-        Quaternion rotation = Quaternion.identity;
-        GameObject bossObj = Instantiate(bossPrefab, position, rotation);
-        bossObj.GetComponent<EnemyController>().Init(player.gameObject, null);
-        UIManager.Instance.ShowBossUI();
-    }
-
-    public void EndBossStage()
-    {
-        // Boss �ı�
-        // Boss UI active false
-    }
+    #endregion
 }
